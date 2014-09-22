@@ -35,11 +35,12 @@ sources := \
 	main/api_exec.c \
 	main/dispatch.h \
 	main/remap_helper.h \
-	main/get_hash.h
+	main/get_hash.h \
+        main/format_info.h
 
 LOCAL_SRC_FILES := $(filter-out $(sources), $(LOCAL_SRC_FILES))
 
-LOCAL_C_INCLUDES += $(intermediates)/main
+LOCAL_C_INCLUDES += $(intermediates)/main $(intermediates)
 
 ifeq ($(strip $(MESA_ENABLE_ASM)),true)
 ifeq ($(TARGET_ARCH),x86)
@@ -50,9 +51,16 @@ endif
 
 sources += main/git_sha1.h
 
+ifdef TARGET_2ND_ARCH
+sources_1st := $(addprefix $(intermediates)/, $(sources))
+LOCAL_GENERATED_SOURCES_64 += $(sources_1st)
+intermediates_2nd := $(call local-intermediates-dir,,2ND_)
+sources_2nd := $(addprefix $(intermediates_2nd)/, $(sources))
+LOCAL_GENERATED_SOURCES_32 += $(sources_2nd)
+else
 sources := $(addprefix $(intermediates)/, $(sources))
-
 LOCAL_GENERATED_SOURCES += $(sources)
+endif
 
 glapi := $(MESA_TOP)/src/mapi/glapi/gen
 
@@ -110,11 +118,53 @@ $(intermediates)/main/api_exec.c: PRIVATE_XML := -f $(glapi)/gl_and_es_API.xml
 $(intermediates)/main/api_exec.c: $(dispatch_deps)
 	$(call es-gen)
 
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/main/git_sha1.h:
+	@mkdir -p $(dir $@)
+	@echo "GIT-SHA1: $(PRIVATE_MODULE) <= git"
+	$(hide) touch $@
+	$(hide) if which git > /dev/null; then \
+			git --git-dir $(PRIVATE_PATH)/../../.git log -n 1 --oneline | \
+			sed 's/^\([^ ]*\) .*/#define MESA_GIT_SHA1 "git-\1"/' \
+			> $@; \
+		fi
+
+$(intermediates_2nd)/main/dispatch.h: PRIVATE_SCRIPT := $(MESA_PYTHON2) $(glapi)/gl_table.py
+$(intermediates_2nd)/main/dispatch.h: PRIVATE_XML := -f $(glapi)/gl_and_es_API.xml
+
+$(intermediates_2nd)/main/dispatch.h: $(dispatch_deps)
+	$(call es-gen, $* -m remap_table)
+
+$(intermediates_2nd)/main/remap_helper.h: PRIVATE_SCRIPT := $(MESA_PYTHON2) $(glapi)/remap_helper.py
+$(intermediates_2nd)/main/remap_helper.h: PRIVATE_XML := -f $(glapi)/gl_and_es_API.xml
+
+$(intermediates_2nd)/main/remap_helper.h: $(dispatch_deps)
+	$(call es-gen, $*)
+
+$(intermediates_2nd)/main/enums.c: PRIVATE_SCRIPT :=$(MESA_PYTHON2) $(glapi)/gl_enums.py
+$(intermediates_2nd)/main/enums.c: PRIVATE_XML := -f $(glapi)/gl_and_es_API.xml
+
+$(intermediates_2nd)/main/enums.c: $(dispatch_deps)
+	$(call es-gen)
+
+$(intermediates_2nd)/main/api_exec.c: PRIVATE_SCRIPT := $(MESA_PYTHON2) $(glapi)/gl_genexec.py
+$(intermediates_2nd)/main/api_exec.c: PRIVATE_XML := -f $(glapi)/gl_and_es_API.xml
+
+$(intermediates_2nd)/main/api_exec.c: $(dispatch_deps)
+	$(call es-gen)
+endif
+
 GET_HASH_GEN := $(LOCAL_PATH)/main/get_hash_generator.py
 
 $(intermediates)/main/get_hash.h: $(glapi)/gl_and_es_API.xml \
                $(LOCAL_PATH)/main/get_hash_params.py $(GET_HASH_GEN)
 	@$(MESA_PYTHON2) $(GET_HASH_GEN) -f $< > $@
+
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/main/get_hash.h: $(glapi)/gl_and_es_API.xml \
+               $(LOCAL_PATH)/main/get_hash_params.py $(GET_HASH_GEN)
+	@$(MESA_PYTHON2) $(GET_HASH_GEN) -f $< > $@
+endif
 
 FORMAT_INFO := $(LOCAL_PATH)/main/format_info.py
 format_info_deps := \
@@ -124,3 +174,8 @@ format_info_deps := \
 
 $(intermediates)/main/format_info.h: $(format_info_deps)
 	@$(MESA_PYTHON2) $(FORMAT_INFO) $< > $@
+
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/main/format_info.h: $(format_info_deps)
+	@$(MESA_PYTHON2) $(FORMAT_INFO) $< > $@
+endif

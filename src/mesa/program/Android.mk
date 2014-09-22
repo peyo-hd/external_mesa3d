@@ -57,8 +57,16 @@ generated_sources_basenames := \
 LOCAL_SRC_FILES := \
 	$(filter-out $(generated_sources_basenames),$(subst program/,,$(PROGRAM_FILES)))
 
+ifdef TARGET_2ND_ARCH
+LOCAL_GENERATED_SOURCES_64 := \
+	$(addprefix $(intermediates)/program/,$(generated_sources_basenames))
+intermediates_2nd := $(call local-intermediates-dir,,2ND_)
+LOCAL_GENERATED_SOURCES_32 := \
+	$(addprefix $(intermediates_2nd)/program/,$(generated_sources_basenames))
+else
 LOCAL_GENERATED_SOURCES := \
 	$(addprefix $(intermediates)/program/,$(generated_sources_basenames))
+endif
 
 $(intermediates)/program/program_parse.tab.c: $(LOCAL_PATH)/program_parse.y
 	$(mesa_local-y-to-c-and-h)
@@ -68,6 +76,17 @@ $(intermediates)/program/program_parse.tab.h: $(intermediates)/program/program_p
 
 $(intermediates)/program/lex.yy.c: $(LOCAL_PATH)/program_lexer.l
 	$(local-l-to-c)
+
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/program/program_parse.tab.c: $(LOCAL_PATH)/program_parse.y
+	$(mesa_local-y-to-c-and-h)
+
+$(intermediates_2nd)/program/program_parse.tab.h: $(intermediates)/program/program_parse.tab.c
+	@
+
+$(intermediates_2nd)/program/lex.yy.c: $(LOCAL_PATH)/program_lexer.l
+	$(local-l-to-c)
+endif
 
 LOCAL_C_INCLUDES := \
 	$(intermediates) \

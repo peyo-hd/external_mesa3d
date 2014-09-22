@@ -39,8 +39,16 @@ LOCAL_SRC_FILES := $(filter-out $(sources), $(LOCAL_SRC_FILES))
 
 LOCAL_C_INCLUDES += $(intermediates) $(intermediates)/glcpp $(MESA_TOP)/src/glsl/glcpp
 
+ifdef TARGET_2ND_ARCH
+sources_1st := $(addprefix $(intermediates)/, $(sources))
+LOCAL_GENERATED_SOURCES_64 += $(sources_1st)
+intermediates_2nd := $(call local-intermediates-dir,,2ND_)
+sources_2nd := $(addprefix $(intermediates_2nd)/, $(sources))
+LOCAL_GENERATED_SOURCES_32 += $(sources_2nd)
+else
 sources := $(addprefix $(intermediates)/, $(sources))
 LOCAL_GENERATED_SOURCES += $(sources)
+endif
 
 define local-l-or-ll-to-c-or-cpp
 	@mkdir -p $(dir $@)
@@ -77,3 +85,19 @@ $(intermediates)/glcpp/glcpp-lex.c: $(LOCAL_PATH)/glcpp/glcpp-lex.l
 
 $(intermediates)/glcpp/glcpp-parse.c: $(LOCAL_PATH)/glcpp/glcpp-parse.y
 	$(call glsl_local-y-to-c-and-h)
+
+ifdef TARGET_2ND_ARCH
+
+$(intermediates_2nd)/glsl_lexer.cpp: $(LOCAL_PATH)/glsl_lexer.ll
+	$(call local-l-or-ll-to-c-or-cpp)
+
+$(intermediates_2nd)/glsl_parser.cpp: $(LOCAL_PATH)/glsl_parser.yy
+	$(call local-yy-to-cpp-and-h,.cpp)
+
+$(intermediates_2nd)/glcpp/glcpp-lex.c: $(LOCAL_PATH)/glcpp/glcpp-lex.l
+	$(call local-l-or-ll-to-c-or-cpp)
+
+$(intermediates_2nd)/glcpp/glcpp-parse.c: $(LOCAL_PATH)/glcpp/glcpp-parse.y
+	$(call glsl_local-y-to-c-and-h)
+
+endif

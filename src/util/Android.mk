@@ -51,52 +51,24 @@ intermediates := $(call local-intermediates-dir)
 # This is the list of auto-generated files: sources and headers
 sources := $(addprefix $(intermediates)/, $(MESA_UTIL_GENERATED_FILES))
 
+ifdef TARGET_2ND_ARCH
+LOCAL_GENERATED_SOURCES_64 += $(sources)
+intermediates_2nd := $(call local-intermediates-dir,,2ND_)
+sources_2nd := $(addprefix $(intermediates_2nd)/, $(MESA_UTIL_GENERATED_FILES))
+LOCAL_GENERATED_SOURCES_32 += $(sources_2nd)
+else
 LOCAL_GENERATED_SOURCES += $(sources)
+endif
 
 FORMAT_SRGB := $(LOCAL_PATH)/format_srgb.py
 
 $(intermediates)/format_srgb.c: $(FORMAT_SRGB)
 	@$(MESA_PYTHON2) $(FORMAT_SRGB) $< > $@
+
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/format_srgb.c: $(FORMAT_SRGB)
+	@$(MESA_PYTHON2) $(FORMAT_SRGB) $< > $@
+endif
 
 include $(MESA_COMMON_MK)
 include $(BUILD_STATIC_LIBRARY)
-
-# ---------------------------------------
-# Build host libmesa_util
-# ---------------------------------------
-
-include $(CLEAR_VARS)
-
-LOCAL_IS_HOST_MODULE := true
-LOCAL_CFLAGS := -D_POSIX_C_SOURCE=199309L
-
-LOCAL_SRC_FILES := \
-	$(MESA_UTIL_FILES)
-
-LOCAL_C_INCLUDES := \
-	$(MESA_TOP)/src/mesa \
-	$(MESA_TOP)/src/mapi \
-	$(MESA_TOP)/src
-
-LOCAL_MODULE := libmesa_util
-
-# Generated sources
-
-ifeq ($(LOCAL_MODULE_CLASS),)
-LOCAL_MODULE_CLASS := STATIC_LIBRARIES
-endif
-
-intermediates := $(call local-intermediates-dir)
-
-# This is the list of auto-generated files: sources and headers
-sources := $(addprefix $(intermediates)/, $(MESA_UTIL_GENERATED_FILES))
-
-LOCAL_GENERATED_SOURCES += $(sources)
-
-FORMAT_SRGB := $(LOCAL_PATH)/format_srgb.py
-
-$(intermediates)/format_srgb.c: $(FORMAT_SRGB)
-	@$(MESA_PYTHON2) $(FORMAT_SRGB) $< > $@
-
-include $(MESA_COMMON_MK)
-include $(BUILD_HOST_STATIC_LIBRARY)

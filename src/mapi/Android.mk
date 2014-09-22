@@ -56,6 +56,7 @@ LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 intermediates := $(call local-intermediates-dir)
 abi_header := $(intermediates)/$(abi_header)
 LOCAL_GENERATED_SOURCES := $(abi_header)
+LOCAL_C_INCLUDES += $(intermediates)
 
 $(abi_header): PRIVATE_PRINTER := shared-glapi
 

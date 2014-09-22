@@ -31,12 +31,18 @@ LOCAL_SRC_FILES := \
 	egl_dri2.c \
 	platform_android.c
 
-LOCAL_CFLAGS := \
+LOCAL_CFLAGS_32 := \
 	-DDEFAULT_DRIVER_DIR=\"/system/lib/dri\" \
 	-DHAVE_SHARED_GLAPI \
 	-DHAVE_ANDROID_PLATFORM
 
+LOCAL_CFLAGS_64 := \
+	-DDEFAULT_DRIVER_DIR=\"/system/lib64/dri\" \
+	-DHAVE_SHARED_GLAPI \
+	-DHAVE_ANDROID_PLATFORM
+
 LOCAL_C_INCLUDES := \
+	system/core/libsync/include \
 	$(MESA_TOP)/src/mapi \
 	$(MESA_TOP)/src/egl/main \
 	$(MESA_TOP)/src/loader \
