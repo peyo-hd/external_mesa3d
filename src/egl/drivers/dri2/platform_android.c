@@ -56,6 +56,8 @@ get_format_bpp(int native)
    case HAL_PIXEL_FORMAT_RGB_565:
       bpp = 2;
       break;
+   case HAL_PIXEL_FORMAT_YV12:
+      bpp = 1;
    default:
       bpp = 0;
       break;
@@ -367,6 +369,9 @@ dri2_create_image_android_native_buffer(_EGLDisplay *disp, _EGLContext *ctx,
       break;
    case HAL_PIXEL_FORMAT_RGBX_8888:
       format = __DRI_IMAGE_FORMAT_XBGR8888;
+      break;
+   case HAL_PIXEL_FORMAT_YV12:
+      format = __DRI_IMAGE_FOURCC_YV12;
       break;
    case HAL_PIXEL_FORMAT_RGB_888:
       /* unsupported */
