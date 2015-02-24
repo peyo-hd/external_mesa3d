@@ -33,11 +33,16 @@ sources := \
 	glsl_lexer.cpp \
 	glsl_parser.cpp \
 	glcpp/glcpp-lex.c \
-	glcpp/glcpp-parse.c
+	glcpp/glcpp-parse.c \
+	nir/nir_constant_expressions.c \
+	nir/nir_opcodes.c \
+	nir/nir_opcodes.h \
+	nir/nir_opt_algebraic.c
 
 LOCAL_SRC_FILES := $(filter-out $(sources), $(LOCAL_SRC_FILES))
 
-LOCAL_C_INCLUDES += $(intermediates) $(intermediates)/glcpp $(MESA_TOP)/src/glsl/glcpp
+LOCAL_C_INCLUDES += $(intermediates) $(intermediates)/glcpp $(MESA_TOP)/src/glsl/glcpp \
+	$(intermediates)/nir $(MESA_TOP)/src/glsl/nir
 
 ifdef TARGET_2ND_ARCH
 sources_1st := $(addprefix $(intermediates)/, $(sources))
@@ -100,4 +105,68 @@ $(intermediates_2nd)/glcpp/glcpp-lex.c: $(LOCAL_PATH)/glcpp/glcpp-lex.l
 $(intermediates_2nd)/glcpp/glcpp-parse.c: $(LOCAL_PATH)/glcpp/glcpp-parse.y
 	$(call glsl_local-y-to-c-and-h)
 
+endif
+
+NIR_CONSTANT_EXPRESSIONS := $(LOCAL_PATH)/nir/nir_constant_expressions.py
+nir_constant_expressions_deps := \
+	$(LOCAL_PATH)/nir/nir_constant_expressions.h \
+	$(LOCAL_PATH)/nir/nir_opcodes.py \
+	$(NIR_CONSTANT_EXPRESSIONS)
+
+$(intermediates)/nir/nir_constant_expressions.c: $(nir_constant_expressions_deps)
+	@mkdir -p $(dir $@)/nir
+	$(MESA_PYTHON2) $(NIR_CONSTANT_EXPRESSIONS) > $@
+
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/nir/nir_constant_expressions.c: $(nir_constant_expressions_deps)
+	@mkdir -p $(dir $@)/nir
+	$(MESA_PYTHON2) $(NIR_CONSTANT_EXPRESSIONS) > $@
+endif
+
+NIR_OPCODES_H := $(LOCAL_PATH)/nir/nir_opcodes_h.py
+nir_opcodes_h_deps := \
+	$(LOCAL_PATH)/nir/nir_opcodes.py \
+	$(NIR_OPCODES_H)
+
+$(intermediates)/nir/nir_opcodes.h: $(nir_opcodes_h_deps)
+	@mkdir -p $(dir $@)/nir
+	@$(MESA_PYTHON2) $(NIR_OPCODES_H) > $@
+
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/nir/nir_opcodes.h: $(nir_opcodes_h_deps)
+	@mkdir -p $(dir $@)/nir
+	@$(MESA_PYTHON2) $(NIR_OPCODES_H) > $@
+endif
+
+
+NIR_OPCODES_C := $(LOCAL_PATH)/nir/nir_opcodes_c.py
+nir_opcodes_c_deps := \
+	$(LOCAL_PATH)/nir/nir_opcodes.py \
+	$(NIR_OPCODES_C)
+	
+$(intermediates)/nir/nir_opcodes.c: $(nir_opcodes_c_deps)
+	@mkdir -p $(dir $@)/nir
+	@$(MESA_PYTHON2) $(NIR_OPCODES_C) > $@
+
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/nir/nir_opcodes.c: $(nir_opcodes_c_deps)
+	@mkdir -p $(dir $@)/nir
+	@$(MESA_PYTHON2) $(NIR_OPCODES_C) > $@
+endif
+
+
+NIR_OPT_ALGEBRAIC := $(LOCAL_PATH)/nir/nir_opt_algebraic.py
+nir_opt_algebraic_deps := \
+	$(LOCAL_PATH)/nir/nir_opt_algebraic.py \
+	$(LOCAL_PATH)/nir/nir_algebraic.py \
+	$(NIR_OPT_ALGEBRAIC)
+	
+$(intermediates)/nir/nir_opt_algebraic.c: $(nir_opt_algebraic_deps)
+	@mkdir -p $(dir $@)/nir
+	@$(MESA_PYTHON2) $(NIR_OPT_ALGEBRAIC) > $@
+
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/nir/nir_opt_algebraic.c: $(nir_opt_algebraic_deps)
+	@mkdir -p $(dir $@)/nir
+	@$(MESA_PYTHON2) $(NIR_OPT_ALGEBRAIC) > $@
 endif

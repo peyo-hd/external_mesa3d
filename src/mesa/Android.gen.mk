@@ -36,7 +36,9 @@ sources := \
 	main/dispatch.h \
 	main/remap_helper.h \
 	main/get_hash.h \
-        main/format_info.h
+    main/format_info.h \
+    main/format_pack.c \
+    main/format_unpack.c
 
 LOCAL_SRC_FILES := $(filter-out $(sources), $(LOCAL_SRC_FILES))
 
@@ -179,3 +181,32 @@ ifdef TARGET_2ND_ARCH
 $(intermediates_2nd)/main/format_info.h: $(format_info_deps)
 	@$(MESA_PYTHON2) $(FORMAT_INFO) $< > $@
 endif
+
+FORMAT_PACK := $(LOCAL_PATH)/main/format_pack.py
+format_pack_deps := \
+	$(LOCAL_PATH)/main/formats.csv \
+	$(LOCAL_PATH)/main/format_parser.py \
+	$(FORMAT_PACK)
+
+$(intermediates)/main/format_pack.c: $(format_pack_deps)
+	@$(MESA_PYTHON2) $(FORMAT_PACK) $< > $@
+
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/main/format_pack.c: $(format_pack_deps)
+	@$(MESA_PYTHON2) $(FORMAT_PACK) $< > $@
+endif
+
+FORMAT_UNPACK := $(LOCAL_PATH)/main/format_unpack.py
+format_unpack_deps := \
+	$(LOCAL_PATH)/main/formats.csv \
+	$(LOCAL_PATH)/main/format_parser.py \
+	$(FORMAT_UNPACK)
+
+$(intermediates)/main/format_unpack.c: $(format_unpack_deps)
+	@$(MESA_PYTHON2) $(FORMAT_UNPACK) $< > $@
+
+ifdef TARGET_2ND_ARCH
+$(intermediates_2nd)/main/format_unpack.c: $(format_unpack_deps)
+	@$(MESA_PYTHON2) $(FORMAT_UNPACK) $< > $@
+endif
+
