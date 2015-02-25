@@ -56,7 +56,10 @@ LOCAL_SHARED_LIBRARIES := \
 	libhardware \
 	liblog \
 	libcutils \
-	libgralloc_drm \
+
+ifneq ($(MESA_GPU_DRIVERS),vc4)
+LOCAL_SHARED_LIBRARIES += libgralloc_drm
+endif
 
 ifeq ($(shell echo "$(MESA_ANDROID_VERSION) >= 4.2" | bc),1)
 LOCAL_SHARED_LIBRARIES += libsync

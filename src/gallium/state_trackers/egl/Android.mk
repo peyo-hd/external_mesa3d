@@ -40,10 +40,12 @@ LOCAL_CFLAGS := \
 LOCAL_C_INCLUDES := \
 	$(GALLIUM_TOP)/state_trackers/egl \
 	$(GALLIUM_TOP)/winsys \
-	$(MESA_TOP)/src/egl/main
+	$(MESA_TOP)/src/egl/main \
+        $(MESA_TOP)/src/ \
+        system/core/libsync/include
 
-# swrast only
-ifeq ($(MESA_GPU_DRIVERS),swrast)
+# swrast & vc4 only
+ifneq ($(filter swrast vc4, $(MESA_GPU_DRIVERS)),)
 LOCAL_CFLAGS += -DANDROID_BACKEND_NO_DRM
 else
 LOCAL_C_INCLUDES += $(DRM_GRALLOC_TOP)
