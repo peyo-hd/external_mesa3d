@@ -22,6 +22,8 @@
  * IN THE SOFTWARE.
  */
 
+#define LOG_TAG "vc4_resource"
+#include <cutils/log.h>
 #include "util/u_blit.h"
 #include "util/u_memory.h"
 #include "util/u_format.h"
@@ -778,7 +780,7 @@ vc4_resource_from_handle(struct pipe_screen *pscreen,
                 static bool warned = false;
                 if (!warned) {
                         warned = true;
-                        fprintf(stderr,
+                        ALOGW(
                                 "Attempting to import %dx%d %s with "
                                 "unsupported stride %d instead of %d\n",
                                 prsc->width0, prsc->height0,
@@ -786,7 +788,6 @@ vc4_resource_from_handle(struct pipe_screen *pscreen,
                                 whandle->stride,
                                 slice->stride);
                 }
-                goto fail;
         }
 
         return prsc;
