@@ -101,9 +101,7 @@ LOCAL_CFLAGS += \
 
 endif
 endif
-ifeq ($(ARCH_ARM_HAVE_NEON),true)
-LOCAL_CFLAGS_arm += -DUSE_ARM_ASM
-endif
+
 LOCAL_CFLAGS_arm64 += -DUSE_AARCH64_ASM
 
 ifneq ($(LOCAL_IS_HOST_MODULE),true)
