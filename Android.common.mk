@@ -31,12 +31,25 @@ LOCAL_C_INCLUDES += \
 
 MESA_VERSION := $(shell cat $(MESA_TOP)/VERSION)
 LOCAL_CFLAGS += \
+	-Wno-unused-private-field \
+	-Wno-unused-function \
+	-Wno-unused-variable \
 	-Wno-unused-parameter \
 	-Wno-date-time \
 	-Wno-pointer-arith \
 	-Wno-missing-field-initializers \
 	-Wno-initializer-overrides \
 	-Wno-mismatched-tags \
+	-Wno-sometimes-uninitialized \
+	-Wno-missing-braces \
+	-Wno-enum-conversion\
+	-Wno-delete-non-virtual-dtor \
+	-Wno-overloaded-virtual \
+	-Wno-absolute-value \
+	-Wno-implicit-function-declaration \
+	-Wno-typedef-redefinition \
+	-Wno-deprecated-register \
+	-Wno-duplicate-decl-specifier \
 	-DVERSION=\"$(MESA_VERSION)\" \
 	-DPACKAGE_VERSION=\"$(MESA_VERSION)\" \
 	-DPACKAGE_BUGREPORT=\"https://bugs.freedesktop.org/enter_bug.cgi?product=Mesa\"
@@ -98,8 +111,10 @@ LOCAL_CFLAGS += -DHAVE_LIBDRM
 LOCAL_SHARED_LIBRARIES += libdrm
 endif
 
-LOCAL_CFLAGS_32 += -DDEFAULT_DRIVER_DIR=\"/system/lib/$(MESA_DRI_MODULE_REL_PATH)\"
-LOCAL_CFLAGS_64 += -DDEFAULT_DRIVER_DIR=\"/system/lib64/$(MESA_DRI_MODULE_REL_PATH)\"
+LOCAL_CFLAGS_32 += -DDEFAULT_DRIVER_DIR=\"/vendor/lib/$(MESA_DRI_MODULE_REL_PATH)\"
+LOCAL_CFLAGS_64 += -DDEFAULT_DRIVER_DIR=\"/vendor/lib64/$(MESA_DRI_MODULE_REL_PATH)\"
+
+LOCAL_PROPRIETARY_MODULE := true
 
 # uncomment to keep the debug symbols
 #LOCAL_STRIP_MODULE := false
