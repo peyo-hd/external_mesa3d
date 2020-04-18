@@ -74,6 +74,7 @@ EXTENSIONS = [
     Extension('VK_EXT_debug_report',                      9, True),
     Extension('VK_EXT_external_memory_dma_buf',           1, True),
     Extension('VK_EXT_image_drm_format_modifier',         1, False),
+    Extension('VK_ANDROID_native_buffer',                 1, 'ANDROID'),
 ]
 
 # Sort the extension list the way we expect: KHR, then EXT, then vendors
