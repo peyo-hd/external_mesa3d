@@ -60,16 +60,19 @@ LOCAL_MODULE := libmesa_util
 LOCAL_MODULE_CLASS := STATIC_LIBRARIES
 
 intermediates := $(call local-generated-sources-dir)
+prebuilt_intermediates := $(MESA_TOP)/prebuilt-intermediates
 
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(intermediates)
 
-UTIL_GENERATED_SOURCES := $(addprefix $(intermediates)/,$(MESA_UTIL_GENERATED_FILES))
-LOCAL_GENERATED_SOURCES := $(UTIL_GENERATED_SOURCES)
+$(intermediates)/format_srgb.c: $(prebuilt_intermediates)/util/format_srgb.c
+	@mkdir -p $(dir $@)
+	@cp -f $< $@
 
-$(LOCAL_GENERATED_SOURCES): PRIVATE_PYTHON := $(MESA_PYTHON2)
-$(UTIL_GENERATED_SOURCES): PRIVATE_CUSTOM_TOOL = $(PRIVATE_PYTHON) $^ > $@
-$(UTIL_GENERATED_SOURCES): $(intermediates)/%.c: $(LOCAL_PATH)/%.py $(LOCAL_PATH)/format/u_format.csv
-	$(transform-generated-source)
+$(intermediates)/u_format_table.c: $(prebuilt_intermediates)/util/u_format_table.c
+	@mkdir -p $(dir $@)
+	@cp -f $< $@
+
+LOCAL_GENERATED_SOURCES := $(intermediates)/format_srgb.c $(intermediates)/u_format_table.c
 
 include $(MESA_COMMON_MK)
 include $(BUILD_STATIC_LIBRARY)
