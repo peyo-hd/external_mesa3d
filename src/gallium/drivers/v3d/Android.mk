@@ -47,6 +47,8 @@ LOCAL_GENERATED_SOURCES := $(MESA_GEN_NIR_H) $(intermediates)/v3d_driinfo.h
 
 LOCAL_C_INCLUDES := $(MESA_TOP)/include
 
+LOCAL_HEADER_LIBRARIES += liblog_headers
+
 # We need libmesa_nir to get NIR's generated include directories.
 LOCAL_STATIC_LIBRARIES := \
 	libmesa_nir
