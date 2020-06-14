@@ -63,10 +63,10 @@ v3d_bo_dump_stats(struct v3d_screen *screen)
                 cache_size += bo->size;
         }
 
-        fprintf(stderr, "  BOs allocated:   %d\n", screen->bo_count);
-        fprintf(stderr, "  BOs size:        %dkb\n", screen->bo_size / 1024);
-        fprintf(stderr, "  BOs cached:      %d\n", cache_count);
-        fprintf(stderr, "  BOs cached size: %dkb\n", cache_size / 1024);
+        ALOGE( "  BOs allocated:   %d\n", screen->bo_count);
+        ALOGE(  "  BOs size:        %dkb\n", screen->bo_size / 1024);
+        ALOGE( "  BOs cached:      %d\n", cache_count);
+        ALOGE( "  BOs cached size: %dkb\n", cache_size / 1024);
 
         if (!list_is_empty(&cache->time_list)) {
                 struct v3d_bo *first = list_first_entry(&cache->time_list,
@@ -76,14 +76,14 @@ v3d_bo_dump_stats(struct v3d_screen *screen)
                                                       struct v3d_bo,
                                                       time_list);
 
-                fprintf(stderr, "  oldest cache time: %ld\n",
+                ALOGE(  "  oldest cache time: %ld\n",
                         (long)first->free_time);
-                fprintf(stderr, "  newest cache time: %ld\n",
+                ALOGE(  "  newest cache time: %ld\n",
                         (long)last->free_time);
 
                 struct timespec time;
                 clock_gettime(CLOCK_MONOTONIC, &time);
-                fprintf(stderr, "  now:               %ld\n",
+                ALOGE(  "  now:               %ld\n",
                         (long)time.tv_sec);
         }
 }
@@ -125,7 +125,9 @@ v3d_bo_from_cache(struct v3d_screen *screen, uint32_t size, const char *name)
                         } else if (ret == -EINVAL) {
                                 ALOGE("v3d_bo_from_cache(): wait failed: EINVAL");
                                 v3d_bo_remove_from_cache(cache, bo);
+                                dump_stats = true;
                                 v3d_bo_free(bo);
+                                dump_stats = false;
                                 mtx_unlock(&cache->lock);
                                 return NULL;
                         } else {
@@ -241,13 +243,13 @@ v3d_bo_free(struct v3d_bo *bo)
         c.handle = bo->handle;
         int ret = v3d_ioctl(screen->fd, DRM_IOCTL_GEM_CLOSE, &c);
         if (ret != 0)
-                fprintf(stderr, "close object %d: %s\n", bo->handle, strerror(errno));
+                ALOGE("v3d_bo_free() close object %d: %s\n", bo->handle, strerror(errno));
 
         screen->bo_count--;
         screen->bo_size -= bo->size;
 
         if (dump_stats) {
-                fprintf(stderr, "Freed %s%s%dkb:\n",
+        	ALOGE("v3d_bo_free() Freed %s%s%dkb:\n",
                         bo->name ? bo->name : "",
                         bo->name ? " " : "",
                         bo->size / 1024);
