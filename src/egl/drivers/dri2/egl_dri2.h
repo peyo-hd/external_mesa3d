@@ -448,6 +448,9 @@ dri2_create_image_dma_buf(_EGLDisplay *disp, _EGLContext *ctx,
 _EGLImage *
 dri2_create_image_from_dri(_EGLDisplay *disp, __DRIimage *dri_image);
 
+unsigned
+dri2_check_dma_buf_format(const _EGLImageAttribs *attrs);
+
 #ifdef HAVE_X11_PLATFORM
 EGLBoolean
 dri2_initialize_x11(_EGLDisplay *disp);
