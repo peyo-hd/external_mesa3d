@@ -186,6 +186,93 @@ get_native_buffer_name(struct ANativeWindowBuffer *buf)
 #endif /* HAVE_DRM_GRALLOC */
 
 static __DRIimage *
+create_dri_dma_buf(_EGLDisplay *disp, const EGLint *attr_list)
+{
+   struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
+   _EGLImageAttribs attrs;
+   __DRIimage *dri_image;
+   unsigned num_fds;
+   int fds[DMA_BUF_MAX_PLANES];
+   int pitches[DMA_BUF_MAX_PLANES];
+   int offsets[DMA_BUF_MAX_PLANES];
+   uint64_t modifier;
+   bool has_modifier = false;
+   unsigned error;
+
+   if (!_eglParseImageAttribList(&attrs, disp, attr_list))
+      return NULL;
+
+   num_fds = dri2_check_dma_buf_format(&attrs);
+   if (!num_fds)
+      return NULL;
+
+   for (unsigned i = 0; i < num_fds; ++i) {
+      fds[i] = attrs.DMABufPlaneFds[i].Value;
+      pitches[i] = attrs.DMABufPlanePitches[i].Value;
+      offsets[i] = attrs.DMABufPlaneOffsets[i].Value;
+   }
+
+   if (attrs.DMABufPlaneModifiersLo[0].IsPresent) {
+      modifier = combine_u32_into_u64(attrs.DMABufPlaneModifiersHi[0].Value,
+                                      attrs.DMABufPlaneModifiersLo[0].Value);
+      has_modifier = true;
+   }
+
+   if (attrs.ProtectedContent) {
+      if (dri2_dpy->image->base.version < 18 ||
+          dri2_dpy->image->createImageFromDmaBufs3 == NULL) {
+         _eglError(EGL_BAD_MATCH, "unsupported protected_content attribute");
+         return EGL_NO_IMAGE_KHR;
+      }
+      if (!has_modifier)
+         modifier = DRM_FORMAT_MOD_INVALID;
+
+      dri_image =
+         dri2_dpy->image->createImageFromDmaBufs3(dri2_dpy->dri_screen,
+            attrs.Width, attrs.Height, attrs.DMABufFourCC.Value,
+            modifier, fds, num_fds, pitches, offsets,
+            attrs.DMABufYuvColorSpaceHint.Value,
+            attrs.DMABufSampleRangeHint.Value,
+            attrs.DMABufChromaHorizontalSiting.Value,
+            attrs.DMABufChromaVerticalSiting.Value,
+            attrs.ProtectedContent ? __DRI_IMAGE_PROTECTED_CONTENT_FLAG : 0,
+            &error,
+            NULL);
+   }
+   else if (has_modifier) {
+      if (dri2_dpy->image->base.version < 15 ||
+          dri2_dpy->image->createImageFromDmaBufs2 == NULL) {
+         _eglError(EGL_BAD_MATCH, "unsupported dma_buf format modifier");
+         return EGL_NO_IMAGE_KHR;
+      }
+      dri_image =
+         dri2_dpy->image->createImageFromDmaBufs2(dri2_dpy->dri_screen,
+            attrs.Width, attrs.Height, attrs.DMABufFourCC.Value,
+            modifier, fds, num_fds, pitches, offsets,
+            attrs.DMABufYuvColorSpaceHint.Value,
+            attrs.DMABufSampleRangeHint.Value,
+            attrs.DMABufChromaHorizontalSiting.Value,
+            attrs.DMABufChromaVerticalSiting.Value,
+            &error,
+            NULL);
+   }
+   else {
+      dri_image =
+         dri2_dpy->image->createImageFromDmaBufs(dri2_dpy->dri_screen,
+            attrs.Width, attrs.Height, attrs.DMABufFourCC.Value,
+            fds, num_fds, pitches, offsets,
+            attrs.DMABufYuvColorSpaceHint.Value,
+            attrs.DMABufSampleRangeHint.Value,
+            attrs.DMABufChromaHorizontalSiting.Value,
+            attrs.DMABufChromaVerticalSiting.Value,
+            &error,
+            NULL);
+   }
+
+   return dri_image;
+}
+
+static __DRIimage *
 droid_create_image_from_prime_fds_yuv(_EGLDisplay *disp,
                                      struct ANativeWindowBuffer *buf,
                                      void *priv,
@@ -193,12 +280,11 @@ droid_create_image_from_prime_fds_yuv(_EGLDisplay *disp,
 {
    struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
    struct android_ycbcr ycbcr;
-   int offsets[3];
-   int pitches[3];
+   size_t offsets[3];
+   size_t pitches[3];
    enum chroma_order chroma_order;
    int fourcc;
    int ret;
-   unsigned error;
 
    if (!dri2_dpy->gralloc->lock_ycbcr) {
       _eglLog(_EGL_WARNING, "Gralloc does not support lock_ycbcr");
@@ -262,15 +348,42 @@ droid_create_image_from_prime_fds_yuv(_EGLDisplay *disp,
       assert(num_fds == expected_planes);
    }
 
-   return dri2_dpy->image->createImageFromDmaBufs(dri2_dpy->dri_screen,
-      buf->width, buf->height, fourcc,
-      fds, num_fds, pitches, offsets,
-      EGL_ITU_REC601_EXT,
-      EGL_YUV_NARROW_RANGE_EXT,
-      EGL_YUV_CHROMA_SITING_0_EXT,
-      EGL_YUV_CHROMA_SITING_0_EXT,
-      &error,
-      priv);
+   if (ycbcr.chroma_step == 2) {
+      /* Semi-planar Y + CbCr or Y + CrCb format. */
+      const EGLint attr_list_2plane[] = {
+         EGL_WIDTH, buf->width,
+         EGL_HEIGHT, buf->height,
+         EGL_LINUX_DRM_FOURCC_EXT, fourcc,
+         EGL_DMA_BUF_PLANE0_FD_EXT, fds[0],
+         EGL_DMA_BUF_PLANE0_PITCH_EXT, pitches[0],
+         EGL_DMA_BUF_PLANE0_OFFSET_EXT, offsets[0],
+         EGL_DMA_BUF_PLANE1_FD_EXT, fds[1],
+         EGL_DMA_BUF_PLANE1_PITCH_EXT, pitches[1],
+         EGL_DMA_BUF_PLANE1_OFFSET_EXT, offsets[1],
+         EGL_NONE, 0
+      };
+
+      return create_dri_dma_buf(disp, attr_list_2plane);
+   } else {
+      /* Fully planar Y + Cb + Cr or Y + Cr + Cb format. */
+      const EGLint attr_list_3plane[] = {
+         EGL_WIDTH, buf->width,
+         EGL_HEIGHT, buf->height,
+         EGL_LINUX_DRM_FOURCC_EXT, fourcc,
+         EGL_DMA_BUF_PLANE0_FD_EXT, fds[0],
+         EGL_DMA_BUF_PLANE0_PITCH_EXT, pitches[0],
+         EGL_DMA_BUF_PLANE0_OFFSET_EXT, offsets[0],
+         EGL_DMA_BUF_PLANE1_FD_EXT, fds[1],
+         EGL_DMA_BUF_PLANE1_PITCH_EXT, pitches[1],
+         EGL_DMA_BUF_PLANE1_OFFSET_EXT, offsets[1],
+         EGL_DMA_BUF_PLANE2_FD_EXT, fds[2],
+         EGL_DMA_BUF_PLANE2_PITCH_EXT, pitches[2],
+         EGL_DMA_BUF_PLANE2_OFFSET_EXT, offsets[2],
+         EGL_NONE, 0
+      };
+
+      return create_dri_dma_buf(disp, attr_list_3plane);
+   }
 }
 
 static __DRIimage *

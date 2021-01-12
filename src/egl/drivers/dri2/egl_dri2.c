@@ -2688,7 +2688,7 @@ dri2_num_fourcc_format_planes(EGLint format)
 }
 
 /* Returns the total number of file descriptors. Zero indicates an error. */
-static unsigned
+unsigned
 dri2_check_dma_buf_format(const _EGLImageAttribs *attrs)
 {
    unsigned plane_n = dri2_num_fourcc_format_planes(attrs->DMABufFourCC.Value);
