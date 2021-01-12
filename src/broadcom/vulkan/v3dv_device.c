@@ -465,6 +465,13 @@ physical_device_init(struct v3dv_physical_device *device,
 #if !using_v3d_simulator
 #ifdef VK_USE_PLATFORM_XCB_KHR
    display_fd = create_display_fd_xcb();
+#else
+   const char *dpath = "/dev/dri/card0";
+   display_fd = open(dpath, O_RDWR | O_CLOEXEC);
+   if (display_fd < 0) {
+      result = VK_ERROR_INCOMPATIBLE_DRIVER;
+      goto fail;
+   }
 #endif
 
    if (display_fd == -1) {
