@@ -217,3 +217,58 @@ cc_defaults {
         },
     },
 }
+
+cc_library_static {
+    name: "libgbm_mesa",
+    vendor: true,
+    srcs: [
+        "src/gbm/main/backend.c",
+        "src/gbm/main/gbm.c",
+        "src/gbm/backends/dri/gbm_dri.c",
+        "src/util/hash_table.c",
+        "src/util/os_file.c",
+        "src/util/os_misc.c",
+        "src/util/ralloc.c",
+        "src/util/simple_mtx.c",
+        "src/util/u_call_once.c",
+        "src/util/u_debug.c",
+        "src/util/u_printf.c",
+        "src/loader/loader.c",
+        "src/loader/loader_dri_helper.c",
+    ],
+
+    export_include_dirs: ["src/gbm/main"],
+
+    local_include_dirs: [
+        "include",
+        "include/libgbm_mesa",
+        "src/gallium/auxiliary",
+        "src/gallium/frontends/dri",
+        "src/gallium/include",
+        "src/loader",
+        "src/mesa",
+        "src/util",
+        "src",
+    ],
+
+    shared_libs: [
+        "libcutils",
+        "libdrm",
+	"liblog",
+    ],
+    cflags: [
+        "-DHAVE_TIMESPEC_GET",
+        "-DHAVE_LIBDRM",
+        "-Wno-missing-field-initializers",
+        "-Wno-sign-compare",
+        "-DHAVE_PTHREAD=1",
+        "-Wno-unused-parameter",
+        "-Wno-unused-function",
+        "-Wno-missing-field-initializers",
+        "-DDEFAULT_DRIVER_DIR=\"/vendor/lib64/dri\"",
+        "-DDEFAULT_BACKENDS_PATH=\"/vendor/lib64/gbm\"",
+        "-DMAJOR_IN_SYSMACROS",
+        "-DHAVE_DRI",
+        "-DHAVE_DRI2",
+    ],
+}
