@@ -809,7 +809,8 @@ v3d_resource_create_with_modifiers(struct pipe_screen *pscreen,
 
         v3d_setup_slices(rsc, 0, tmpl->bind & PIPE_BIND_SHARED);
 
-        if (screen->ro && (tmpl->bind & PIPE_BIND_SCANOUT)) {
+        if (screen->ro && (tmpl->bind & (PIPE_BIND_SCANOUT |
+                                         PIPE_BIND_SHARED))) {
                 struct winsys_handle handle;
                 struct pipe_resource scanout_tmpl = {
                         .target = prsc->target,
