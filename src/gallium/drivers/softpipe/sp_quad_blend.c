@@ -916,6 +916,9 @@ rebase_colors(enum format base_format, float (*quadColor)[4])
    }
 }
 
+#define LOG_TAG "sp_quad_blend"
+#include <log/log.h>
+
 static void
 blend_fallback(struct quad_stage *qs, 
                struct quad_header *quads[],

@@ -84,7 +84,7 @@ MESA3D_GLES_BINS := \
 MESON_GEN_NINJA := \
 	cd $(MESON_OUT_DIR) && PATH=/usr/bin:/usr/local/bin:$$PATH meson ./build     \
 	--cross-file $(AOSP_ABSOLUTE_PATH)/$(MESON_GEN_DIR)/aosp_cross               \
-	--buildtype=release                                                          \
+	--buildtype=debug                                                          \
 	-Ddri-search-path=/vendor/$(MESA3D_LIB_DIR)/dri                              \
 	-Dplatforms=android                                                          \
 	-Dplatform-sdk-version=$(PLATFORM_SDK_VERSION)                               \
@@ -120,7 +120,7 @@ $(MESON_GEN_FILES_TARGET): PRIVATE_YACCFLAGS := $(LOCAL_YACCFLAGS)
 $(MESON_GEN_FILES_TARGET): PRIVATE_ASFLAGS := $(my_asflags)
 $(MESON_GEN_FILES_TARGET): PRIVATE_CONLYFLAGS := $(my_conlyflags)
 $(MESON_GEN_FILES_TARGET): PRIVATE_CFLAGS := $(my_cflags)
-$(MESON_GEN_FILES_TARGET): PRIVATE_CPPFLAGS := $(my_cppflags)
+$(MESON_GEN_FILES_TARGET): PRIVATE_CPPFLAGS := $(my_cppflags) -g -O0
 $(MESON_GEN_FILES_TARGET): PRIVATE_CFLAGS_NO_OVERRIDE := $(my_cflags_no_override)
 $(MESON_GEN_FILES_TARGET): PRIVATE_CPPFLAGS_NO_OVERRIDE := $(my_cppflags_no_override)
 $(MESON_GEN_FILES_TARGET): PRIVATE_RTTI_FLAG := $(LOCAL_RTTI_FLAG)

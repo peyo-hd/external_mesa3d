@@ -38,6 +38,9 @@
 #include "util/u_tile.h"
 #include "sp_tile_cache.h"
 
+#define LOG_TAG "sp_tile_cache"
+#include <log/log.h>
+
 static struct softpipe_cached_tile *
 sp_alloc_tile(struct softpipe_tile_cache *tc);
 
@@ -236,16 +239,18 @@ clear_tile_rgba(struct softpipe_cached_tile *tile,
                 enum pipe_format format,
                 const union pipe_color_union *clear_value)
 {
-   if (clear_value->f[0] == 0.0 &&
+   ALOGI("clear_tile_rgba() before if(clear_value->f[0])");
+   /*if (clear_value->f[0] == 0.0 &&
        clear_value->f[1] == 0.0 &&
        clear_value->f[2] == 0.0 &&
        clear_value->f[3] == 0.0) {
+      ALOGI("clear_tile_rgba() memset()");
       memset(tile->data.color, 0, sizeof(tile->data.color));
    }
    else {
       uint i, j;
-
       if (util_format_is_pure_uint(format)) {
+         ALOGI("clear_tile_rgba() in if(util_format_is_pure_uint()");
          for (i = 0; i < TILE_SIZE; i++) {
             for (j = 0; j < TILE_SIZE; j++) {
                tile->data.colorui128[i][j][0] = clear_value->ui[0];
@@ -255,6 +260,7 @@ clear_tile_rgba(struct softpipe_cached_tile *tile,
             }
          }
       } else if (util_format_is_pure_sint(format)) {
+         ALOGI("clear_tile_rgba() in util_format_is_pure_sint()");
          for (i = 0; i < TILE_SIZE; i++) {
             for (j = 0; j < TILE_SIZE; j++) {
                tile->data.colori128[i][j][0] = clear_value->i[0];
@@ -264,6 +270,7 @@ clear_tile_rgba(struct softpipe_cached_tile *tile,
             }
          }
       } else {
+         ALOGI("clear_tile_rgba() in else{");
          for (i = 0; i < TILE_SIZE; i++) {
             for (j = 0; j < TILE_SIZE; j++) {
                tile->data.color[i][j][0] = clear_value->f[0];
@@ -273,7 +280,7 @@ clear_tile_rgba(struct softpipe_cached_tile *tile,
             }
          }
       }
-   }
+      }*/
 }
 
 
@@ -396,12 +403,12 @@ sp_flush_tile(struct softpipe_tile_cache* tc, unsigned pos)
                            tc->entries[pos]->data.depth32, 0/*STRIDE*/);
       }
       else {
-         pipe_put_tile_rgba(tc->transfer[layer], tc->transfer_map[layer],
+         /*pipe_put_tile_rgba(tc->transfer[layer], tc->transfer_map[layer],
                             tc->tile_addrs[pos].bits.x * TILE_SIZE,
                             tc->tile_addrs[pos].bits.y * TILE_SIZE,
                             TILE_SIZE, TILE_SIZE,
                             tc->surface->format,
-                            tc->entries[pos]->data.color);
+                            tc->entries[pos]->data.color);*/
       }
       tc->tile_addrs[pos].bits.invalid = 1;  /* mark as empty */
    }
@@ -478,6 +485,7 @@ sp_alloc_tile(struct softpipe_tile_cache *tc)
    return tile;
 }
 
+
 /**
  * Get a tile from the cache.
  * \param x, y  position of tile, in pixels
@@ -526,16 +534,21 @@ sp_find_cached_tile(struct softpipe_tile_cache *tc,
       assert(pt->resource);
 
       if (is_clear_flag_set(tc->clear_flags, addr, tc->clear_flags_size)) {
+         ALOGI("sp_find_cached_tile() before /* don't get tile from  ");
          /* don't get tile from framebuffer, just clear it */
          if (tc->depth_stencil) {
+             ALOGI("sp_find_cached_tile() before clear_tile()");
             clear_tile(tile, pt->resource->format, tc->clear_val);
          }
          else {
-            clear_tile_rgba(tile, pt->resource->format, &tc->clear_color);
+             ALOGI("sp_find_cached_tile() before clear_tile_rgba()");
+             //clear_tile_rgba(tile, pt->resource->format, &tc->clear_color);
          }
+         ALOGI("sp_find_cached_tile() before clear_clear_flag()  ");
          clear_clear_flag(tc->clear_flags, addr, tc->clear_flags_size);
       }
       else {
+         ALOGI("sp_find_cached_tile() before /*get new tile data from ");
          /* get new tile data from transfer */
          if (tc->depth_stencil) {
             pipe_get_tile_raw(tc->transfer[layer], tc->transfer_map[layer],
