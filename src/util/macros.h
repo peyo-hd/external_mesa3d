@@ -80,7 +80,7 @@
  * Static (compile-time) assertion.
  */
 #define STATIC_ASSERT(cond) do { \
-   static_assert(cond, #cond); \
+   _Static_assert(cond, #cond); \
 } while (0)
 
 /**
