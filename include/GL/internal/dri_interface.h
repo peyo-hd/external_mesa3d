@@ -43,6 +43,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <GL/gl.h>
+#include <GL/glext.h>
+
 /**
  * \name DRI interface structures
  *
@@ -442,7 +445,6 @@ struct mesa_glinterop_device_info;
 struct mesa_glinterop_export_in;
 struct mesa_glinterop_export_out;
 struct mesa_glinterop_flush_out;
-typedef struct __GLsync *GLsync;
 
 struct __DRI2interopExtensionRec {
    __DRIextension base;
