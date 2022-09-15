@@ -32,6 +32,8 @@ cc_library_static {
         "src/util/os_file.c",
         "src/util/os_misc.c",
         "src/util/ralloc.c",
+        "src/util/simple_mtx.c",
+        "src/util/u_call_once.c",
         "src/util/u_debug.c",
         "src/util/u_printf.c",
         "src/loader/loader.c",
@@ -42,6 +44,7 @@ cc_library_static {
 
     local_include_dirs: [
         "include",
+        "include/libgbm_mesa",
         "src/loader",
         "src/util",
         "src",
@@ -64,5 +67,7 @@ cc_library_static {
         "-DDEFAULT_DRIVER_DIR=\"/vendor/lib64/dri\"",
         "-DDEFAULT_BACKENDS_PATH=\"/vendor/lib64/gbm\"",
         "-DMAJOR_IN_SYSMACROS",
+        "-DHAVE_DRI",
+        "-DHAVE_DRI2",
     ],
 }
