@@ -250,7 +250,6 @@ static struct dri_extension_match dri_core_extensions[] = {
 
 static struct dri_extension_match gbm_dri_device_extensions[] = {
    { __DRI_CORE, 1, offsetof(struct gbm_dri_device, core), false },
-   { __DRI_MESA, 1, offsetof(struct gbm_dri_device, mesa), false },
    { __DRI_IMAGE_DRIVER, 1, offsetof(struct gbm_dri_device, image_driver), false },
 };
 
@@ -315,10 +314,17 @@ dri_screen_create_for_driver(struct gbm_dri_device *dri, char *driver_name)
 
    dri->driver_extensions = extensions;
    dri->loader_extensions = gbm_dri_screen_extensions;
-   dri->screen = dri->mesa->createNewScreen(0, swrast ? -1 : dri->base.v0.fd,
+   if (dri->image_driver != NULL) {
+      dri->screen = dri->image_driver->createNewScreen2(0, dri->base.v0.fd,
                                             dri->loader_extensions,
                                             dri->driver_extensions,
                                             &dri->driver_configs, dri);
+   } else {
+      dri->screen = dri->mesa->createNewScreen(0, swrast ? -1 : dri->base.v0.fd,
+                                            dri->loader_extensions,
+                                            dri->driver_extensions,
+                                            &dri->driver_configs, dri);
+   }
    if (dri->screen == NULL)
       goto close_driver;
 
