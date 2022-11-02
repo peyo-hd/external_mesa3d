@@ -35,6 +35,7 @@ MESA_VK_LIB_SUFFIX_broadcom := broadcom
 MESA_VK_LIB_SUFFIX_panfrost := panfrost
 MESA_VK_LIB_SUFFIX_virtio-experimental := virtio
 MESA_VK_LIB_SUFFIX_swrast := lvp
+MESA_VK_LIB_SUFFIX_imagination-experimental := powervr_mesa
 
 include $(CLEAR_VARS)
 
